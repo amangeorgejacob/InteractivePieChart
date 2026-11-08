@@ -9,27 +9,20 @@
   <style>
     body {
       margin: 0;
-      padding: 10px;
+      padding: 20px;
       font-family: system-ui, -apple-system, sans-serif;
       background-color: transparent;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      box-sizing: border-box;
+      text-align: center;
     }
     h2 {
       color: #2b4c7e;
-      margin-bottom: 5px;
-      font-size: 26px;
-      font-weight: 600;
+      margin-bottom: 20px;
+      font-size: 24px;
     }
     .chart-container {
-      position: relative;
       width: 100%;
-      max-width: 600px;
-      height: 450px;
+      max-width: 500px;
+      margin: 0 auto;
     }
   </style>
 </head>
@@ -53,7 +46,6 @@
           'Farmers Insurance', 'BOEING', 'Issaquah Schools Foundation', 'Lucas G.'
         ],
         datasets: [{
-          // Replace these numbers with your actual funding amounts or percentages
           data: [22.2, 8.5, 7.5, 6.0, 9.0, 11.0, 4.0, 3.0, 9.4, 11.4, 8.0],
           backgroundColor: [
             '#00cc00', '#3b82f6', '#009900', '#a5d8ff', 
@@ -66,7 +58,6 @@
       },
       options: {
         responsive: true,
-        maintainAspectRatio: false,
         plugins: {
           legend: {
             position: 'bottom',
@@ -74,8 +65,7 @@
               boxWidth: 14,
               padding: 12,
               font: {
-                size: 13,
-                family: 'system-ui'
+                size: 13
               }
             }
           },
