@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Funding Distribution</title>
+  <!-- Load Chart.js library from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 10px;
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: transparent;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      box-sizing: border-box;
+    }
+    h2 {
+      color: #2b4c7e;
+      margin-bottom: 5px;
+      font-size: 26px;
+      font-weight: 600;
+    }
+    .chart-container {
+      position: relative;
+      width: 100%;
+      max-width: 600px;
+      height: 450px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Funding Distribution</h2>
+  
+  <div class="chart-container">
+    <canvas id="fundingChart"></canvas>
+  </div>
+
+  <script>
+    const ctx = document.getElementById('fundingChart').getContext('2d');
+    
+    const fundingChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: [
+          'AirReps', 'Polymaker', 'Les Schwab', 'AFEW', 
+          'Microsoft', 'Starbucks', 'King and Bunnys', 
+          'Farmers Insurance', 'BOEING', 'Issaquah Schools Foundation', 'Lucas G.'
+        ],
+        datasets: [{
+          // Replace these numbers with your actual funding amounts or percentages
+          data: [22.2, 8.5, 7.5, 6.0, 9.0, 11.0, 4.0, 3.0, 9.4, 11.4, 8.0],
+          backgroundColor: [
+            '#00cc00', '#3b82f6', '#009900', '#a5d8ff', 
+            '#1e3a8a', '#10b981', '#60a5fa', '#1e40af', 
+            '#1f4e79', '#16a34a', '#3b82f6'
+          ],
+          borderWidth: 2,
+          borderColor: '#ffffff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              boxWidth: 14,
+              padding: 12,
+              font: {
+                size: 13,
+                family: 'system-ui'
+              }
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                let value = context.parsed || 0;
+                return ` Share : ${value}%`;
+              }
+            }
+          }
+        },
+        cutout: '55%'
+      }
+    });
+  </script>
+
+</body>
+</html>
