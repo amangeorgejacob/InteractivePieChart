@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Funding Distribution</title>
-  <!-- Load Chart.js from cdnjs (School-friendly) -->
+  <!-- Load Chart.js from cdnjs -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <style>
     body {
@@ -42,16 +42,16 @@
         type: 'doughnut',
         data: {
           labels: [
-            'AirReps', 'Polymaker', 'Les Schwab', 'AFEW', 
-            'Microsoft', 'Starbucks', 'King and Bunnys', 
-            'Farmers Insurance', 'BOEING', 'Issaquah Schools Foundation', 'Lucas G.'
+            'AirReps', 'Lucas G.', 'ISF', 'Boeing', 
+            'Farmers Insurance', 'King and Bunny’s', 'Starbucks', 
+            'Microsoft', 'AFEW', 'Les Schwab', 'Polymaker'
           ],
           datasets: [{
-            data: [22.2, 8.5, 7.5, 6.0, 9.0, 11.0, 4.0, 3.0, 9.4, 11.4, 8.0],
+            data: [22.2, 11.1, 7.4, 7.4, 2.2, 3.7, 14.8, 8.9, 7.4, 7.4, 7.4],
             backgroundColor: [
-              '#00cc00', '#3b82f6', '#009900', '#a5d8ff', 
-              '#1e3a8a', '#10b981', '#60a5fa', '#1e40af', 
-              '#1f4e79', '#16a34a', '#3b82f6'
+              '#00cc00', '#3b82f6', '#16a34a', '#1f4e79', 
+              '#1e40af', '#60a5fa', '#10b981', '#1e3a8a', 
+              '#a5d8ff', '#009900', '#3b82f6'
             ],
             borderWidth: 2,
             borderColor: '#ffffff'
