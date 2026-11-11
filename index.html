@@ -62,8 +62,8 @@
   <!-- Main Container -->
   <div id="main-container" class="w-full max-w-xl flex flex-col justify-center items-center gap-4 my-auto min-h-0">
 
-    <!-- Control Toolbar (Doughnut vs Pie Toggle) -->
-    <div class="flex items-center justify-end w-full px-1">
+    <!-- Control Toolbar (Doughnut vs Pie Toggle) — Centered -->
+    <div class="flex items-center justify-center w-full px-1">
       <div class="inline-flex rounded-lg bg-white/10 p-1 backdrop-blur-md border border-white/15 shadow-sm">
         <button id="btn-doughnut" onclick="switchChartType('doughnut')" class="px-3 py-1 text-xs font-medium text-white bg-emerald-500/90 rounded-md shadow transition-all duration-200">
           Doughnut
@@ -98,7 +98,7 @@
     const chartData = {
       labels: [
         'AirReps', 'Lucas G.', 'ISF', 'Boeing', 
-        'Farmers Insurance', 'King and Bunny’s', 'Starbucks', 
+        'Farmers Insurance', 'King and Bunny\'s', 'Starbucks', 
         'Microsoft', 'AFEW', 'Les Schwab', 'Polymaker'
       ],
       datasets: [{
