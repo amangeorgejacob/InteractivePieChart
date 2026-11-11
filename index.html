@@ -4,86 +4,387 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Funding Distribution</title>
-  <!-- Load Chart.js from cdnjs -->
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <!-- FontAwesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
   <style>
-    body {
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    html, body {
+      background-color: transparent !important;
       margin: 0;
-      padding: 20px;
-      font-family: system-ui, -apple-system, sans-serif;
-      background-color: transparent;
-      text-align: center;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+      color: #ffffff;
+      overflow-x: hidden;
     }
-    h2 {
-      color: #ffffff; /* Changed title to white */
-      margin-bottom: 20px;
-      font-size: 24px;
+
+    /* Custom Scrollbar for legend list */
+    ::-webkit-scrollbar {
+      width: 5px;
     }
-    .chart-container {
-      width: 100%;
-      max-width: 500px;
-      margin: 0 auto;
+    ::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.4);
+    }
+
+    .chart-shadow {
+      filter: drop-shadow(0px 8px 16px rgba(0, 0, 0, 0.35));
     }
   </style>
 </head>
-<body>
+<body class="min-h-screen p-3 sm:p-5 flex flex-col justify-center items-center bg-transparent">
 
-  <h2>Funding Distribution</h2>
-  
-  <div class="chart-container">
-    <canvas id="fundingChart"></canvas>
+  <!-- Centered Loading Spinner & Error Overlay -->
+  <div id="statusOverlay" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-transparent backdrop-blur-sm transition-opacity duration-300">
+    <!-- Loading Spinner -->
+    <div id="loadingState" class="flex flex-col items-center gap-3">
+      <div class="w-12 h-12 border-4 border-white/20 border-t-emerald-400 rounded-full animate-spin"></div>
+      <span class="text-sm font-medium text-slate-200">Loading Funding Chart...</span>
+    </div>
+    
+    <!-- Failed to Load State (Hidden by default) -->
+    <div id="errorState" class="hidden flex-col items-center gap-3 text-center p-6 bg-slate-900/90 border border-white/10 rounded-2xl max-w-xs shadow-2xl backdrop-blur-md">
+      <div class="w-12 h-12 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center text-xl">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <div>
+        <h3 class="text-sm font-bold text-white">Failed to Load Chart</h3>
+        <p class="text-xs text-slate-300 mt-1">Unable to load chart components. Check your connection or try again.</p>
+      </div>
+      <button onclick="retryLoading()" class="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold text-xs rounded-xl transition-all shadow-md active:scale-95">
+        <i class="fa-solid fa-rotate-right mr-1.5"></i> Retry
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Container Card (Transparent background) -->
+  <div id="mainContainer" class="w-full max-w-4xl bg-transparent p-2 sm:p-4 opacity-0 transition-opacity duration-500">
+    
+    <!-- Header Section -->
+    <div class="flex flex-col sm:flex-row justify-between items-center pb-4 border-b border-white/10 gap-3">
+      <div>
+        <h2 class="text-xl sm:text-2xl font-bold text-white tracking-tight flex items-center gap-2.5">
+          <i class="fa-solid fa-chart-pie text-emerald-400"></i>
+          Funding Distribution
+        </h2>
+        <p class="text-slate-300 text-xs mt-0.5">Interactive breakdown of sponsor and partner contributions</p>
+      </div>
+
+      <!-- Controls & Toggle View -->
+      <div class="flex items-center gap-1.5 bg-white/10 p-1 rounded-xl backdrop-blur-md border border-white/15">
+        <button id="typeDoughnut" onclick="toggleChartType('doughnut')" class="px-3 py-1 text-xs font-semibold rounded-lg transition-all duration-200 bg-emerald-500 text-slate-950 shadow-md">
+          Doughnut
+        </button>
+        <button id="typePie" onclick="toggleChartType('pie')" class="px-3 py-1 text-xs font-medium text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200">
+          Pie Chart
+        </button>
+      </div>
+    </div>
+
+    <!-- Chart & Legend Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-5 items-center">
+      
+      <!-- Canvas Wrapper -->
+      <div class="lg:col-span-7 flex flex-col items-center justify-center relative min-h-[280px] sm:min-h-[340px] w-full">
+        <div class="w-full max-w-[360px] aspect-square relative chart-shadow flex items-center justify-center">
+          <canvas id="fundingChart"></canvas>
+          <!-- Center Stat Overlay for Doughnut -->
+          <div id="centerOverlay" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none transition-opacity duration-300">
+            <span id="centerLabel" class="text-xs uppercase tracking-wider text-slate-300 font-semibold">Total Share</span>
+            <span id="centerValue" class="text-3xl font-extrabold text-white tracking-tight mt-0.5">100%</span>
+            <span id="centerSubtext" class="text-xs text-emerald-400 font-medium mt-0.5">11 Contributors</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Interactive Breakdown Cards -->
+      <div class="lg:col-span-5 flex flex-col gap-2 max-h-[340px] overflow-y-auto pr-1">
+        <div class="flex justify-between items-center px-1 mb-1">
+          <span class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Contributors</span>
+          <span class="text-[11px] text-slate-400 font-normal">Click to toggle segment</span>
+        </div>
+        <div id="contributorsList" class="flex flex-col gap-1.5">
+          <!-- Dynamic legend items injected here -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer Summary Stat Bar -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-6 pt-5 border-t border-white/10">
+      <div class="bg-white/5 border border-white/10 p-2.5 rounded-xl text-center backdrop-blur-sm">
+        <span class="block text-[11px] text-slate-300 font-medium">Top Sponsor</span>
+        <span class="block text-xs sm:text-sm font-bold text-emerald-400 mt-0.5">AirReps (22.2%)</span>
+      </div>
+      <div class="bg-white/5 border border-white/10 p-2.5 rounded-xl text-center backdrop-blur-sm">
+        <span class="block text-[11px] text-slate-300 font-medium">Second Largest</span>
+        <span class="block text-xs sm:text-sm font-bold text-emerald-400 mt-0.5">Starbucks (14.8%)</span>
+      </div>
+      <div class="bg-white/5 border border-white/10 p-2.5 rounded-xl text-center backdrop-blur-sm">
+        <span class="block text-[11px] text-slate-300 font-medium">Total Entities</span>
+        <span class="block text-xs sm:text-sm font-bold text-white mt-0.5">11 Partners</span>
+      </div>
+      <div class="bg-white/5 border border-white/10 p-2.5 rounded-xl text-center backdrop-blur-sm">
+        <span class="block text-[11px] text-slate-300 font-medium">Chart Status</span>
+        <span class="block text-xs sm:text-sm font-bold text-blue-400 mt-0.5">Interactive</span>
+      </div>
+    </div>
+
   </div>
 
   <script>
-    window.addEventListener('DOMContentLoaded', (event) => {
-      const ctx = document.getElementById('fundingChart').getContext('2d');
-      
-      const fundingChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels: [
-            'AirReps', 'Lucas G.', 'ISF', 'Boeing', 
-            'Farmers Insurance', 'King and Bunny’s', 'Starbucks', 
-            'Microsoft', 'AFEW', 'Les Schwab', 'Polymaker'
-          ],
-          datasets: [{
-            data: [22.2, 11.1, 7.4, 7.4, 2.2, 3.7, 14.8, 8.9, 7.4, 7.4, 7.4],
-            backgroundColor: [
-              '#00cc00', '#3b82f6', '#16a34a', '#1f4e79', 
-              '#1e40af', '#60a5fa', '#10b981', '#1e3a8a', 
-              '#a5d8ff', '#009900', '#3b82f6'
-            ],
-            borderWidth: 2,
-            borderColor: '#ffffff'
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: {
-              position: 'bottom',
-              labels: {
-                boxWidth: 14,
+    // Data definition using exact values and colors requested
+    const chartData = {
+      labels: [
+        'AirReps', 'Lucas G.', 'ISF', 'Boeing', 
+        'Farmers Insurance', 'King and Bunny’s', 'Starbucks', 
+        'Microsoft', 'AFEW', 'Les Schwab', 'Polymaker'
+      ],
+      values: [22.2, 11.1, 7.4, 7.4, 2.2, 3.7, 14.8, 8.9, 7.4, 7.4, 7.4],
+      colors: [
+        '#00cc00', '#3b82f6', '#16a34a', '#1f4e79', 
+        '#1e40af', '#60a5fa', '#10b981', '#1e3a8a', 
+        '#a5d8ff', '#009900', '#3b82f6'
+      ]
+    };
+
+    let fundingChart = null;
+    let resizeObserver = null;
+
+    function initChart() {
+      try {
+        if (typeof Chart === 'undefined') {
+          throw new Error('Chart.js failed to load');
+        }
+
+        const ctx = document.getElementById('fundingChart').getContext('2d');
+
+        // Create Chart instance
+        fundingChart = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: chartData.labels,
+            datasets: [{
+              data: chartData.values,
+              backgroundColor: chartData.colors,
+              borderWidth: 2,
+              borderColor: 'rgba(255, 255, 255, 0.4)',
+              hoverBorderColor: '#ffffff',
+              hoverBorderWidth: 3,
+              hoverOffset: 10
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false
+              },
+              tooltip: {
+                backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                titleColor: '#ffffff',
+                bodyColor: '#ffffff',
+                borderColor: 'rgba(255, 255, 255, 0.2)',
+                borderWidth: 1,
                 padding: 12,
-                color: '#ffffff', /* Changed legend labels text to white */
-                font: {
-                  size: 13
+                boxPadding: 6,
+                usePointStyle: true,
+                callbacks: {
+                  label: function(context) {
+                    let label = context.label || '';
+                    let value = context.parsed || 0;
+                    return ` ${label}: ${value}%`;
+                  }
                 }
               }
             },
-            tooltip: {
-              callbacks: {
-                label: function(context) {
-                  let value = context.parsed || 0;
-                  return ` Share : ${value}%`;
-                }
+            cutout: '60%',
+            animation: {
+              animateScale: true,
+              animateRotate: true
+            },
+            onHover: (event, chartElement) => {
+              if (chartElement.length > 0) {
+                const idx = chartElement[0].index;
+                updateCenterText(chartData.labels[idx], chartData.values[idx] + '%', chartData.colors[idx]);
+              } else {
+                resetCenterText();
               }
             }
-          },
-          cutout: '55%'
+          }
+        });
+
+        // Render custom legend items
+        renderCustomLegend();
+
+        // Attach Wix embed resize observer
+        setupResizeObserver();
+
+        // Hide loader and show chart
+        hideLoader();
+      } catch (error) {
+        console.error("Initialization Error:", error);
+        showErrorState();
+      }
+    }
+
+    // Dynamic resize handler for Wix embed containers
+    function setupResizeObserver() {
+      if (resizeObserver) resizeObserver.disconnect();
+      
+      const container = document.getElementById('mainContainer');
+      resizeObserver = new ResizeObserver(() => {
+        if (fundingChart) {
+          fundingChart.resize();
         }
       });
+      resizeObserver.observe(container);
+    }
+
+    function hideLoader() {
+      const statusOverlay = document.getElementById('statusOverlay');
+      const mainContainer = document.getElementById('mainContainer');
+      
+      statusOverlay.classList.add('opacity-0', 'pointer-events-none');
+      setTimeout(() => {
+        statusOverlay.style.display = 'none';
+      }, 300);
+      
+      mainContainer.classList.remove('opacity-0');
+    }
+
+    function showErrorState() {
+      document.getElementById('loadingState').classList.add('hidden');
+      document.getElementById('errorState').classList.remove('hidden');
+      document.getElementById('errorState').classList.add('flex');
+    }
+
+    function retryLoading() {
+      document.getElementById('errorState').classList.add('hidden');
+      document.getElementById('errorState').classList.remove('flex');
+      document.getElementById('loadingState').classList.remove('hidden');
+      
+      setTimeout(() => {
+        if (typeof Chart !== 'undefined') {
+          initChart();
+        } else {
+          showErrorState();
+        }
+      }, 500);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      // Small timeout to allow script initialization / catch load errors gracefully
+      setTimeout(initChart, 300);
     });
+
+    function updateCenterText(label, value, color) {
+      const lbl = document.getElementById('centerLabel');
+      const val = document.getElementById('centerValue');
+      const sub = document.getElementById('centerSubtext');
+      if (lbl && val && sub) {
+        lbl.innerText = label;
+        val.innerText = value;
+        val.style.color = color || '#ffffff';
+        sub.innerText = 'Active Segment';
+      }
+    }
+
+    function resetCenterText() {
+      const lbl = document.getElementById('centerLabel');
+      const val = document.getElementById('centerValue');
+      const sub = document.getElementById('centerSubtext');
+      if (lbl && val && sub) {
+        lbl.innerText = 'Total Share';
+        val.innerText = '100%';
+        val.style.color = '#ffffff';
+        sub.innerText = '11 Contributors';
+      }
+    }
+
+    // Render interactive sidebar legend
+    function renderCustomLegend() {
+      const container = document.getElementById('contributorsList');
+      container.innerHTML = '';
+
+      chartData.labels.forEach((label, index) => {
+        const val = chartData.values[index];
+        const color = chartData.colors[index];
+
+        const item = document.createElement('div');
+        item.id = `legend-item-${index}`;
+        item.className = 'flex items-center justify-between p-2 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 cursor-pointer transition-all duration-150 group backdrop-blur-sm';
+        
+        item.innerHTML = `
+          <div class="flex items-center gap-2.5">
+            <span class="w-3.5 h-3.5 rounded-full flex-shrink-0 transition-transform duration-200 group-hover:scale-125 border border-white/20" style="background-color: ${color}"></span>
+            <span class="text-xs font-medium text-slate-100 group-hover:text-white">${label}</span>
+          </div>
+          <span class="text-xs font-bold text-slate-300 group-hover:text-emerald-300">${val}%</span>
+        `;
+
+        // Highlight segment on hover
+        item.addEventListener('mouseenter', () => {
+          fundingChart.setActiveElements([{ datasetIndex: 0, index: index }]);
+          fundingChart.update();
+          updateCenterText(label, val + '%', color);
+        });
+
+        item.addEventListener('mouseleave', () => {
+          fundingChart.setActiveElements([]);
+          fundingChart.update();
+          resetCenterText();
+        });
+
+        // Toggle segment visibility on click
+        item.addEventListener('click', () => {
+          const isMetaVisible = fundingChart.getDataVisibility(index);
+          fundingChart.toggleDataVisibility(index);
+          fundingChart.update();
+
+          if (isMetaVisible) {
+            item.classList.add('opacity-30', 'line-through');
+          } else {
+            item.classList.remove('opacity-30', 'line-through');
+          }
+        });
+
+        container.appendChild(item);
+      });
+    }
+
+    // Toggle Doughnut / Pie mode
+    function toggleChartType(type) {
+      const btnDoughnut = document.getElementById('typeDoughnut');
+      const btnPie = document.getElementById('typePie');
+      const overlay = document.getElementById('centerOverlay');
+
+      if (type === 'doughnut') {
+        fundingChart.options.cutout = '60%';
+        overlay.classList.remove('opacity-0', 'pointer-events-none');
+        btnDoughnut.className = "px-3 py-1 text-xs font-semibold rounded-lg transition-all duration-200 bg-emerald-500 text-slate-950 shadow-md";
+        btnPie.className = "px-3 py-1 text-xs font-medium text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200";
+      } else {
+        fundingChart.options.cutout = '0%';
+        overlay.classList.add('opacity-0', 'pointer-events-none');
+        btnPie.className = "px-3 py-1 text-xs font-semibold rounded-lg transition-all duration-200 bg-emerald-500 text-slate-950 shadow-md";
+        btnDoughnut.className = "px-3 py-1 text-xs font-medium text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200";
+      }
+      fundingChart.update();
+    }
   </script>
 
 </body>
